@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from in_memory_credentials_pool import (
+from aio_credentials_pool.in_memory import (
     Credential,
     CredentialsPool,
     NoCredentialError,
