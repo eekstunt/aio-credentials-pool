@@ -7,7 +7,7 @@ Base = declarative_base()
 
 
 class Credential(Base):
-    __tablename__ = 'credentials'
+    __tablename__ = "credentials"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(Text, unique=True, nullable=False)
