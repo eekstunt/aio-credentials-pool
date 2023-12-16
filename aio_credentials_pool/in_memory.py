@@ -53,7 +53,7 @@ async def access_credential(pool: CredentialsPool) -> None:
 
 
 async def main():
-    with open("credentials.json") as f:
+    with open("fixtures/credentials.json") as f:
         credentials = [
             Credential(
                 username=c["username"], password=c["password"], cookie=c["cookie"]

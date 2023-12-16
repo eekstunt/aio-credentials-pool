@@ -8,6 +8,4 @@ WORKDIR /opt/aio_credentials_pool
 COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-COPY . .
-
-ENTRYPOINT ["./run_migrations.sh"]
+COPY aio_credentials_pool/ ./

@@ -2,10 +2,24 @@ version: '3.9'
 
 
 services:
-  in_memory_credentials_pool:
-    container_name: in_memory_credentials_pool
+  in_memory_cp:
+    container_name: in_memory_cp
     build: .
-    command: python3 in_memory_credentials_pool.py
+    command: python3 in_memory.py
+
+  persistent_cp:
+    container_name: persistent_cp
+    build: .
+    entrypoint: ["./run_migrations.sh"]
+    command: python3 persistent.py
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: postgres
+    volumes:
+      - './aio_credentials_pool:/opt/aio_credentials_pool/.'
     depends_on:
       postgres:
         condition: service_healthy

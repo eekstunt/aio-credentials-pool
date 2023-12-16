@@ -1,4 +1,8 @@
+alembic
+asyncpg
 pip-tools
-ruff
+psycopg2-binary
 pytest
 pytest-asyncio
+ruff
+sqlalchemy
