@@ -1,8 +1,8 @@
 """Load credentials fixture
 
-Revision ID: 890872dbc09f
-Revises: 70f77cac5a07
-Create Date: 2023-12-16 17:05:53.996947
+Revision ID: f67bda6eade3
+Revises: 890872dbc09f
+Create Date: 2023-12-16 18:00:00.644327
 
 """
 import json
@@ -11,21 +11,18 @@ from pathlib import Path
 from alembic import op
 from models import Credential
 
-
 # revision identifiers, used by Alembic.
-revision = "890872dbc09f"
-down_revision = "70f77cac5a07"
+revision = 'f67bda6eade3'
+down_revision = '890872dbc09f'
 branch_labels = None
 depends_on = None
 
 
-CREDENTIALS_JSON_PATH = (
-    Path(__file__).parent.parent.parent / "fixtures" / "credentials.json"
-)
+CREDENTIALS_JSON_PATH = Path(__file__).parent.parent.parent / 'fixtures' / 'credentials.json'
 
 
 def load_credentials_data():
-    with open(CREDENTIALS_JSON_PATH, "r") as file:
+    with open(CREDENTIALS_JSON_PATH) as file:
         data = json.load(file)
         op.bulk_insert(Credential.__table__, data)
 

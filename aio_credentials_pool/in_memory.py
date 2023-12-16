@@ -1,7 +1,7 @@
 import asyncio
 import json
-from dataclasses import dataclass
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 
 
 @dataclass
@@ -29,7 +29,7 @@ class CredentialsPool:
             if asyncio.get_event_loop().time() - start_time > timeout:
                 break
             await asyncio.sleep(0.1)
-        raise NoCredentialError()
+        raise NoCredentialError
 
     async def release(self, credential):
         async with self.lock:
@@ -40,11 +40,11 @@ class CredentialsPool:
 async def get_credential(pool: CredentialsPool, timeout=10):
     credential = await pool.acquire(timeout)
     try:
-        print(f"Acquired credential: {credential.username}")
+        print(f'Acquired credential: {credential.username}')
         yield credential
     finally:
         await pool.release(credential)
-        print(f"Released credential: {credential.username}")
+        print(f'Released credential: {credential.username}')
 
 
 async def access_credential(pool: CredentialsPool) -> None:
@@ -53,12 +53,9 @@ async def access_credential(pool: CredentialsPool) -> None:
 
 
 async def main():
-    with open("fixtures/credentials.json") as f:
+    with open('fixtures/credentials.json') as f:
         credentials = [
-            Credential(
-                username=c["username"], password=c["password"], cookie=c["cookie"]
-            )
-            for c in json.load(f)
+            Credential(username=c['username'], password=c['password'], cookie=c['cookie']) for c in json.load(f)
         ]
 
     pool = CredentialsPool(credentials)
@@ -70,5 +67,5 @@ async def main():
     await asyncio.gather(*worker_tasks)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     asyncio.run(main())

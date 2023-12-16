@@ -1,0 +1,22 @@
+[tool.ruff]
+select = ["ALL"]
+ignore = [
+    "ANN",
+    "EM101",
+    "TRY003",
+    "INP001",
+    "D",
+    "S101",
+    "A003",
+    "G004",
+    "D211",
+    "D213",
+]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.mccabe]
+max-complexity = 10
