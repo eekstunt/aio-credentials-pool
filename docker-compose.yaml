@@ -2,13 +2,13 @@ version: '3.9'
 
 
 services:
-  in_memory_cp:
-    container_name: in_memory_cp
+  in_memory:
+    container_name: in_memory
     build: .
     command: python3 in_memory.py
 
-  persistent_cp:
-    container_name: persistent_cp
+  persistent:
+    container_name: persistent
     build: .
     entrypoint: ["./run_migrations.sh"]
     command: python3 persistent.py
