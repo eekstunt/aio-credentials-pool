@@ -3,10 +3,6 @@ import asyncio
 from base_credentials_pool import BaseCredentialsPool, CredentialMetadata
 
 
-class NoCredentialError(Exception):
-    pass
-
-
 class InMemoryCredentialsPool(BaseCredentialsPool):
     def __init__(self, credentials: list[CredentialMetadata]):
         self.credentials = credentials

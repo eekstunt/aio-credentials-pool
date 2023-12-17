@@ -69,7 +69,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run workers with specified concurrency')
     parser.add_argument('--workers', type=int, default=2000, help='Number of workers')
     parser.add_argument(
-        '--pool_type', choices=['in_memory', 'persistent'], default='persistent', help='Type of credentials pool',
+        '--pool_type',
+        choices=['in_memory', 'persistent'],
+        default='persistent',
+        help='Type of credentials pool',
     )
 
     args = parser.parse_args()

@@ -1,32 +1,37 @@
 import asyncio
 
 import pytest
-
-from aio_credentials_pool.in_memory import (
-    Credential,
-    CredentialsPool,
-    NoCredentialError,
-    get_credential,
+from base_credentials_pool import NoAvailableCredentials
+from in_memory import (
+    CredentialMetadata,
+    InMemoryCredentialsPool,
 )
 
 
 @pytest.fixture()
 def credentials():
     return [
-        Credential('user1', 'pass1', 'cookie1'),
-        Credential('user2', 'pass2', 'cookie2'),
-        Credential('user3', 'pass3', 'cookie3'),
+        CredentialMetadata('user1', 'pass1', 'cookie1'),
+        CredentialMetadata('user2', 'pass2', 'cookie2'),
+        CredentialMetadata('user3', 'pass3', 'cookie3'),
     ]
 
 
 @pytest.mark.asyncio()
 async def test_race_condition(credentials):
-    async def acquire_and_release(pool: CredentialsPool, acquired_credential: Credential):
-        async with get_credential(pool, timeout=10) as credential:
+    async def acquire_and_release(pool: InMemoryCredentialsPool, acquired_credential: CredentialMetadata):
+        credential = None
+        try:
+            credential = await pool.acquire(max_retries=1)
             assert credential.username != acquired_credential.username
             await asyncio.sleep(0.02)
+        except NoAvailableCredentials:
+            pass
+        finally:
+            if credential:
+                await pool.release(credential)
 
-    credentials_pool = CredentialsPool(credentials)
+    credentials_pool = InMemoryCredentialsPool(credentials)
     acquired_credential = await credentials_pool.acquire()
     tasks = [acquire_and_release(credentials_pool, acquired_credential) for _ in range(10)]
 
@@ -35,16 +40,16 @@ async def test_race_condition(credentials):
 
 @pytest.mark.asyncio()
 async def test_acquiring_timeout(credentials):
-    async def acquire_and_release(pool: CredentialsPool):
-        try:
-            async with get_credential(pool, timeout=0.2):
-                await asyncio.sleep(0.3)
-        except NoCredentialError:
-            return 'Timeout occurred'
+    async def acquire_and_release(pool: InMemoryCredentialsPool):
+        credential = await pool.acquire(max_retries=1)
+        await asyncio.sleep(0.3)
+        await pool.release(credential)
 
-    credentials_pool = CredentialsPool(credentials)
-    tasks = [acquire_and_release(credentials_pool) for _ in range(5)]
+    credentials_pool = InMemoryCredentialsPool(credentials)
+    tasks = [acquire_and_release(credentials_pool) for _ in range(7)]
 
-    results = await asyncio.gather(*tasks)
+    results = await asyncio.gather(*tasks, return_exceptions=True)
 
-    assert 'Timeout occurred' in results
+    no_available_count = sum(isinstance(result, NoAvailableCredentials) for result in results)
+
+    assert no_available_count >= 1, 'Expected one or more NoAvailableCredentials exceptions'
