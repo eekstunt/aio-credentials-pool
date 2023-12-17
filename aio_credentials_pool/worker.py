@@ -1,10 +1,13 @@
 import argparse
 import asyncio
+import json
 import logging
 import random
 import signal
 import sys
 
+from base_credentials_pool import CredentialMetadata
+from in_memory import InMemoryCredentialsPool
 from persistent import PersistentCredentialsPool
 
 LOGGER = logging.getLogger(__name__)
@@ -65,6 +68,20 @@ async def main(num_workers: int):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run workers with specified concurrency')
     parser.add_argument('--workers', type=int, default=2000, help='Number of workers')
+    parser.add_argument(
+        '--pool_type', choices=['in_memory', 'persistent'], default='persistent', help='Type of credentials pool',
+    )
 
     args = parser.parse_args()
+
+    if args.pool_type == 'in_memory':
+        with open('fixtures/credentials.json') as f:
+            credentials = [
+                CredentialMetadata(username=c['username'], password=c['password'], cookie=c['cookie'])
+                for c in json.load(f)
+            ]
+        pool = InMemoryCredentialsPool(credentials)
+    else:
+        pool = PersistentCredentialsPool()
+
     asyncio.run(main(args.workers))

@@ -1,23 +1,26 @@
 version: '3.9'
 
+x-aio-credentials-pool-common-environment: &aio-credentials-pool-common-environment
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  POSTGRES_DB: postgres
+
 
 services:
   in_memory:
     container_name: in_memory
     build: .
-    command: python3 in_memory.py --workers 40
+    command: python3 worker.py --workers 40 --pool_type in_memory
+    environment: *aio-credentials-pool-common-environment
 
   persistent:
     container_name: persistent
     build: .
     entrypoint: ["./run_migrations.sh"]
-    command: python3 worker.py --workers 40
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: postgres
+    command: python3 worker.py --workers 40 --pool_type persistent
+    environment: *aio-credentials-pool-common-environment
     volumes:
       - './aio_credentials_pool:/opt/aio_credentials_pool/.'
     depends_on:
