@@ -5,13 +5,13 @@ services:
   in_memory:
     container_name: in_memory
     build: .
-    command: python3 in_memory.py
+    command: python3 in_memory.py --workers 40
 
   persistent:
     container_name: persistent
     build: .
     entrypoint: ["./run_migrations.sh"]
-    command: python3 persistent.py
+    command: python3 worker.py --workers 40
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

@@ -1,6 +1,7 @@
 import asyncio
 
 import pytest
+
 from aio_credentials_pool.in_memory import (
     Credential,
     CredentialsPool,
