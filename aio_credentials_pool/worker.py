@@ -1,9 +1,9 @@
+import argparse
 import asyncio
 import logging
 import random
 import signal
 import sys
-import argparse
 
 from persistent import PersistentCredentialsPool
 

@@ -10,7 +10,7 @@ class Credential(Base):
     __tablename__ = 'credentials'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(Text, unique=True, nullable=False)
+    username = Column(Text, unique=True, nullable=False, index=True)
     password = Column(Text, nullable=False)
     cookie = Column(Text, nullable=True)
     in_use = Column(Boolean, default=False, nullable=False)

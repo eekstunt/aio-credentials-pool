@@ -47,9 +47,7 @@ class PersistentCredentialsPool(BaseCredentialsPool):
 
     async def release(self, credential: Credential):
         async with get_session() as session:
-            db_credential = (
-                await session.execute(select(Credential).filter_by(username=credential.username))
-            ).scalar()
+            db_credential = (await session.execute(select(Credential).filter_by(username=credential.username))).scalar()
             if db_credential:
                 db_credential.in_use = False
             else:
