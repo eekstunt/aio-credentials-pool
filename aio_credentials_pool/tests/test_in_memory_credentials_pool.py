@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 from base_credentials_pool import NoAvailableCredentials
-from in_memory import (
+from in_memory_credentials_pool import (
     CredentialMetadata,
     InMemoryCredentialsPool,
 )

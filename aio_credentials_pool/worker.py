@@ -7,8 +7,8 @@ import signal
 import sys
 
 from base_credentials_pool import CredentialMetadata
-from in_memory import InMemoryCredentialsPool
-from persistent import PersistentCredentialsPool
+from in_memory_credentials_pool import InMemoryCredentialsPool
+from persistent_credentials_pool import PersistentCredentialsPool
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.INFO)
