@@ -16,6 +16,9 @@ lint-fix:
 	ruff format .
 	ruff check --fix .
 
+test:
+	docker-compose run persistent_credentials_pool pytest .
+
 migration:
 	docker-compose exec persistent_credentials_pool alembic revision --autogenerate -m "$(m)"
 

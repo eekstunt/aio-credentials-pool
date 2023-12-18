@@ -19,9 +19,9 @@ async def engine(database_name):
     connection = await asyncpg.connect(user=url.username, password=url.password, host=url.host)
 
     try:
-        databases = await connection.fetch('SELECT datname FROM pg_database WHERE datname=$1', database_name)
+        databases = await connection.fetch(f"SELECT datname FROM pg_database WHERE datname='{database_name}'")
         if not any(database_name in db['datname'] for db in databases):
-            await connection.execute('CREATE DATABASE $1', database_name)
+            await connection.execute(f'CREATE DATABASE {database_name}')
             logging.info(f'Database {database_name} created successfully.')
     finally:
         await connection.close()

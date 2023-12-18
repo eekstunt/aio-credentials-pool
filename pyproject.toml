@@ -2,7 +2,7 @@
 select = ["ALL"]
 ignore = [
     "ANN", "EM101", "TRY003", "INP001", "D", "S101", "A003", "G004", "D211", "D213",
-    "COM812", "ISC001", "S311", "S106", "PLR2004", "E712", "DTZ003", "FBT001",
+    "COM812", "ISC001", "S311", "S106", "PLR2004", "E712", "DTZ003", "FBT001", "S608",
 ]
 line-length = 120
 target-version = "py311"
