@@ -4,5 +4,6 @@ pip-tools
 psycopg2-binary
 pytest
 pytest-asyncio
+pytest-mock
 ruff
 sqlalchemy

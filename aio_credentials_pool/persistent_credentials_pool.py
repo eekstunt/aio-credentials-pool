@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -10,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 engine = create_async_engine(POSTGRES_URL)
 async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
+
+logging.basicConfig(level=logging.INFO)
 
 
 @asynccontextmanager
@@ -41,6 +44,7 @@ class PersistentCredentialsPool(BaseCredentialsPool):
             if credential:
                 credential.date_last_usage = datetime.now()
                 credential.in_use = True
+                logging.info('acquired')
                 return CredentialMetadata.from_orm(credential)
 
         return None
