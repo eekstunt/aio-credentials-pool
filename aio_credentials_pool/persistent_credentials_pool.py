@@ -5,14 +5,18 @@ from datetime import datetime
 from base_credentials_pool import BaseCredentialsPool, CredentialMetadata
 from models import Credential
 from settings import POSTGRES_URL
-from sqlalchemy import nullsfirst, select
+from sqlalchemy import nullsfirst, select, func
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 engine = create_async_engine(POSTGRES_URL)
 async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
 
 
-class CredentialNotFound(Exception):
+class CredentialNotFoundError(Exception):
+    pass
+
+
+class NoCredentialsAtDatabaseError(Exception):
     pass
 
 
@@ -32,6 +36,15 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 class PersistentCredentialsPool(BaseCredentialsPool):
     async def _acquire(self) -> CredentialMetadata | None:
         async with get_session() as session:
+            count = (
+                await session.execute(
+                    select(func.count(Credential.id))
+                )
+            ).scalar()
+
+            if count == 0:
+                raise NoCredentialsAtDatabaseError("Please, upload credentials to the database")
+
             credential = (
                 await session.execute(
                     select(Credential)
@@ -55,4 +68,4 @@ class PersistentCredentialsPool(BaseCredentialsPool):
             if db_credential:
                 db_credential.in_use = False
             else:
-                raise CredentialNotFound('There is no such credential in db which you are trying to release')
+                raise CredentialNotFoundError('There is no such credential in db which you are trying to release')

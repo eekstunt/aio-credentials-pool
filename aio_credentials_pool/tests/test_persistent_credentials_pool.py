@@ -5,7 +5,7 @@ import pytest
 import pytest_asyncio
 from base_credentials_pool import CredentialMetadata, NoAvailableCredentials
 from models import Base, Credential
-from persistent_credentials_pool import PersistentCredentialsPool
+from persistent_credentials_pool import PersistentCredentialsPool, NoCredentialsAtDatabaseError, CredentialNotFoundError
 from settings import POSTGRES_URL
 from sqlalchemy import make_url
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -39,22 +39,22 @@ async def schema_manager(engine):
         await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest_asyncio.fixture()
-async def session(engine, schema_manager):
+@pytest_asyncio.fixture(scope='function')
+async def session(engine, schema_manager, mocker):
     async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
+    mocker.patch('persistent_credentials_pool.async_session', async_session)
 
     yield async_session
 
 
 @pytest.mark.asyncio()
-async def test_race_condition2(session, mocker):
+async def test_race_condition2(session):
     single_credential = Credential(username='test_user3', password='pass1', in_use=False)
 
     async with session() as _session:
         _session.add(single_credential)
         await _session.commit()
 
-    mocker.patch('persistent_credentials_pool.async_session', session)
     credentials_pool = PersistentCredentialsPool()
 
     num_workers = 10
@@ -81,3 +81,28 @@ async def test_race_condition2(session, mocker):
     assert acquired_credentials[0] == CredentialMetadata.from_orm(
         single_credential,
     ), 'The acquired credential does not match the expected credential.'
+
+
+@pytest.mark.asyncio()
+async def test_no_credentials_at_database(session):
+    credentials_pool = PersistentCredentialsPool()
+
+    with pytest.raises(NoCredentialsAtDatabaseError):
+        await credentials_pool.acquire(max_retries=0)
+
+
+@pytest.mark.asyncio()
+async def test_credential_not_found_while_releasing(session):
+    single_credential = Credential(username='test_user1', password='pass1', in_use=False)
+
+    async with session() as _session:
+        _session.add(single_credential)
+        await _session.commit()
+
+    credentials_pool = PersistentCredentialsPool()
+
+    credential = await credentials_pool.acquire(max_retries=0)
+    credential.username = 'changed_username'
+
+    with pytest.raises(CredentialNotFoundError):
+        await credentials_pool.release(credential)
