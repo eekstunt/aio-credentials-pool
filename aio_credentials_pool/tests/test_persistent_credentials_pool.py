@@ -71,15 +71,13 @@ async def test_race_condition2(session, mocker):
             acquired_credentials.append(result)
 
     assert no_available_count == num_workers - 1, (
-        f'Expected {num_workers - 1} NoAvailableCredentials exceptions. '
-        f'Found {no_available_count} instead.'
+        f'Expected {num_workers - 1} NoAvailableCredentials exceptions. Found {no_available_count} instead.'
     )
 
     assert len(acquired_credentials) == 1, (
-        'Expected exactly one acquired credential, '
-        f'but found {len(acquired_credentials)}.'
+        'Expected exactly one acquired credential, ' f'but found {len(acquired_credentials)}.'
     )
 
-    assert acquired_credentials[0] == CredentialMetadata.from_orm(single_credential), (
-        'The acquired credential does not match the expected credential.'
-    )
+    assert acquired_credentials[0] == CredentialMetadata.from_orm(
+        single_credential,
+    ), 'The acquired credential does not match the expected credential.'

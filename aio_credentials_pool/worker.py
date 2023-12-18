@@ -4,21 +4,13 @@ import json
 import logging
 import random
 import signal
-import sys
 
-from base_credentials_pool import CredentialMetadata
+from base_credentials_pool import BaseCredentialsPool, CredentialMetadata
 from in_memory_credentials_pool import InMemoryCredentialsPool
 from persistent_credentials_pool import PersistentCredentialsPool
 
 LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
-
-formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setFormatter(formatter)
-LOGGER.addHandler(console_handler)
-
+logging.basicConfig(level=logging.INFO)
 
 stop_event = asyncio.Event()
 
@@ -48,14 +40,12 @@ async def shutdown(sig: signal.Signals) -> None:
     stop_event.set()
 
 
-async def main(num_workers: int):
+async def main(pool: BaseCredentialsPool, num_workers: int) -> None:
     loop = asyncio.get_event_loop()
 
     signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
     for s in signals:
         loop.add_signal_handler(s, lambda s=s: loop.create_task(shutdown(s)))
-
-    pool = PersistentCredentialsPool()
 
     worker_tasks = []
 
@@ -83,8 +73,8 @@ if __name__ == '__main__':
                 CredentialMetadata(username=c['username'], password=c['password'], cookie=c['cookie'])
                 for c in json.load(f)
             ]
-        pool = InMemoryCredentialsPool(credentials)
+        pool = InMemoryCredentialsPool(credentials[:1])
     else:
         pool = PersistentCredentialsPool()
 
-    asyncio.run(main(args.workers))
+    asyncio.run(main(pool, args.workers))

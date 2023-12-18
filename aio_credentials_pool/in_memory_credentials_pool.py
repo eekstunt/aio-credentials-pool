@@ -14,6 +14,6 @@ class InMemoryCredentialsPool(BaseCredentialsPool):
                 return self.credentials.pop(0)
         return None
 
-    async def release(self, credential: CredentialMetadata) -> None:
+    async def _release(self, credential: CredentialMetadata) -> None:
         async with self.lock:
             self.credentials.append(credential)
