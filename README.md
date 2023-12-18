@@ -58,7 +58,7 @@ Run tests using the following command:
 make test
 ```
 
-### Developer Notes:
+### Development Notes:
 
 - **Dependency Management - pip-tools:**  
   Utilized pip-tools for consistent dependency pinning.
