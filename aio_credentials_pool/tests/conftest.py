@@ -1,11 +1,10 @@
-import os
 import sys
+from pathlib import Path
 
 import pytest
 
-tests_directory = os.path.dirname(os.path.abspath(__file__))
-
-sys.path.insert(0, os.path.dirname(tests_directory))
+tests_directory = Path(__file__).resolve().parent
+sys.path.insert(0, str(tests_directory.parent))
 
 
 @pytest.fixture(scope='session')

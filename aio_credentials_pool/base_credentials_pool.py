@@ -43,7 +43,8 @@ class BaseCredentialsPool:
                 await asyncio.sleep(wait_seconds)
                 current_wait *= 2
 
-        raise NoAvailableCredentialsError(f'No available credentials after {max_retries} retries')
+        error_message = f'No available credentials after {max_retries} retries'
+        raise NoAvailableCredentialsError(error_message)
 
     async def release(self, credential: CredentialMetadata) -> None:
         await self._release(credential)

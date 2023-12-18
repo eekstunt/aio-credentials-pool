@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 
 from alembic import op
+
 from models import Credential
 
 # revision identifiers, used by Alembic.
@@ -22,7 +23,7 @@ CREDENTIALS_JSON_PATH = Path(__file__).parent.parent.parent / 'fixtures' / 'cred
 
 
 def load_credentials_data():
-    with open(CREDENTIALS_JSON_PATH) as file:
+    with Path(CREDENTIALS_JSON_PATH).open() as file:
         data = json.load(file)
         op.bulk_insert(Credential.__table__, data)
 

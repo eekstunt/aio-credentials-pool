@@ -4,6 +4,7 @@ import json
 import logging
 import random
 import signal
+from pathlib import Path
 
 from base_credentials_pool import BaseCredentialsPool, CredentialMetadata
 from in_memory_credentials_pool import InMemoryCredentialsPool
@@ -26,8 +27,8 @@ async def worker(pool, worker_id: int):
                 await asyncio.sleep(random.randint(1, 5))
                 await pool.release(credential)
                 LOGGER.info(f'Worker {worker_id} released credentials: {credential}')
-        except Exception as e:
-            LOGGER.info(f'Worker {worker_id} encountered an error: {e}')
+        except Exception:
+            LOGGER.exception(f'Worker {worker_id} encountered an error')
         finally:
             if stop_event.is_set() and credential:
                 await pool.release(credential)
@@ -47,10 +48,7 @@ async def main(pool: BaseCredentialsPool, num_workers: int) -> None:
     for s in signals:
         loop.add_signal_handler(s, lambda s=s: loop.create_task(shutdown(s)))
 
-    worker_tasks = []
-
-    for i in range(num_workers):
-        worker_tasks.append(loop.create_task(worker(pool, i)))
+    worker_tasks = [loop.create_task(worker(pool, i)) for i in range(num_workers)]
 
     await asyncio.gather(*worker_tasks)
 
@@ -68,7 +66,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.pool_type == 'in_memory':
-        with open('fixtures/credentials.json') as f:
+        credentials_file = Path('fixtures/credentials.json')
+
+        with credentials_file.open() as f:
             credentials = [
                 CredentialMetadata(username=c['username'], password=c['password'], cookie=c['cookie'])
                 for c in json.load(f)

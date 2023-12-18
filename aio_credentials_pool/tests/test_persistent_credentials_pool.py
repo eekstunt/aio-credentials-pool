@@ -4,12 +4,13 @@ import logging
 import asyncpg
 import pytest
 import pytest_asyncio
-from base_credentials_pool import CredentialMetadata, NoAvailableCredentialsError
-from models import Base, Credential
-from persistent_credentials_pool import PersistentCredentialsPool, NoCredentialsAtDatabaseError, CredentialNotFoundError
-from settings import POSTGRES_URL
 from sqlalchemy import make_url
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+from base_credentials_pool import CredentialMetadata, NoAvailableCredentialsError
+from models import Base, Credential
+from persistent_credentials_pool import CredentialNotFoundError, NoCredentialsAtDatabaseError, PersistentCredentialsPool
+from settings import POSTGRES_URL
 
 
 @pytest_asyncio.fixture()
@@ -18,10 +19,13 @@ async def engine(database_name):
     connection = await asyncpg.connect(user=url.username, password=url.password, host=url.host)
 
     try:
-        databases = await connection.fetch(f"SELECT datname FROM pg_database WHERE datname='{database_name}'")
-        if not any(database_name in db.values() for db in databases):
-            await connection.execute(f'CREATE DATABASE {database_name}')
-            print(f'Database {database_name} created successfully.')
+        databases = await connection.fetch(
+            'SELECT datname FROM pg_database WHERE datname=$1',
+            database_name
+        )
+        if not any(database_name in db['datname'] for db in databases):
+            await connection.execute('CREATE DATABASE $1', database_name)
+            logging.info(f'Database {database_name} created successfully.')
     finally:
         await connection.close()
 
@@ -29,6 +33,7 @@ async def engine(database_name):
         make_url(POSTGRES_URL).set(database=database_name),
     )
     yield test_engine
+
 
 
 @pytest_asyncio.fixture()
@@ -41,7 +46,7 @@ async def schema_manager(engine):
 
 
 @pytest_asyncio.fixture(scope='function')
-async def session(engine, schema_manager, mocker):
+async def session(engine, schema_manager, mocker):  # noqa: ARG001
     async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
     mocker.patch('persistent_credentials_pool.async_session', async_session)
 
@@ -160,7 +165,7 @@ async def test_acquiring_and_releasing_coherence(session, caplog):
 
 
 @pytest.mark.asyncio()
-async def test_no_credentials_at_database(session):
+async def test_no_credentials_at_database(session):  # noqa: ARG001
     credentials_pool = PersistentCredentialsPool()
 
     with pytest.raises(NoCredentialsAtDatabaseError):

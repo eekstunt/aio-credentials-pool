@@ -2,11 +2,12 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+from sqlalchemy import func, nullsfirst, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from base_credentials_pool import BaseCredentialsPool, CredentialMetadata
 from models import Credential
 from settings import POSTGRES_URL
-from sqlalchemy import nullsfirst, select, func
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 engine = create_async_engine(POSTGRES_URL)
 async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
@@ -52,7 +53,7 @@ class PersistentCredentialsPool(BaseCredentialsPool):
             ).scalar()
 
             if credential:
-                credential.date_last_usage = datetime.now()
+                credential.date_last_usage = datetime.utcnow()
                 credential.in_use = True
                 return CredentialMetadata.from_orm(credential)
 
