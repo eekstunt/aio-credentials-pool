@@ -12,14 +12,14 @@ services:
   in_memory_credentials_pool:
     container_name: in_memory_credentials_pool
     build: .
-    command: python3 worker.py --workers 40 --pool_type in_memory
+    command: python3 worker.py --workers 300 --pool_type in_memory
     environment: *aio-credentials-pool-common-environment
 
   persistent_credentials_pool:
     container_name: persistent_credentials_pool
     build: .
     entrypoint: ["./run_migrations.sh"]
-    command: python3 worker.py --workers 40 --pool_type persistent
+    command: python3 worker.py --workers 1000 --pool_type persistent
     environment: *aio-credentials-pool-common-environment
     volumes:
       - './aio_credentials_pool:/opt/aio_credentials_pool/.'

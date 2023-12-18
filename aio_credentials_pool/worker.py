@@ -73,7 +73,7 @@ if __name__ == '__main__':
                 CredentialMetadata(username=c['username'], password=c['password'], cookie=c['cookie'])
                 for c in json.load(f)
             ]
-        pool = InMemoryCredentialsPool(credentials[:1])
+        pool = InMemoryCredentialsPool(credentials)
     else:
         pool = PersistentCredentialsPool()
 
