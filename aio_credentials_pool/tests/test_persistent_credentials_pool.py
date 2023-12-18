@@ -42,7 +42,7 @@ async def schema_manager(engine):
 
 
 @pytest_asyncio.fixture(scope='function')
-async def session(engine, schema_manager, mocker):  # noqa: ARG001
+async def db_session(engine, schema_manager, mocker):  # noqa: ARG001
     async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
     mocker.patch('persistent_credentials_pool.async_session', async_session)
 
@@ -50,12 +50,12 @@ async def session(engine, schema_manager, mocker):  # noqa: ARG001
 
 
 @pytest.mark.asyncio()
-async def test_acquiring_single_credential_without_retries(session):
+async def test_acquiring_single_credential_without_retries(db_session):
     single_credential = Credential(username='test_user3', password='pass1', in_use=False)
 
-    async with session() as _session:
-        _session.add(single_credential)
-        await _session.commit()
+    async with db_session() as session:
+        session.add(single_credential)
+        await session.commit()
 
     credentials_pool = PersistentCredentialsPool()
 
@@ -86,7 +86,7 @@ async def test_acquiring_single_credential_without_retries(session):
 
 
 @pytest.mark.asyncio()
-async def test_acquiring_single_credential_with_retries(session):
+async def test_acquiring_single_credential_with_retries(db_session):
     async def acquire_and_release(pool: PersistentCredentialsPool) -> None:
         credential = await pool.acquire(max_retries=5, min_wait=0.05)
         await asyncio.sleep(0.01)
@@ -94,9 +94,9 @@ async def test_acquiring_single_credential_with_retries(session):
 
     single_credential = Credential(username='test_user4', password='pass4', in_use=False)
 
-    async with session() as _session:
-        _session.add(single_credential)
-        await _session.commit()
+    async with db_session() as session:
+        session.add(single_credential)
+        await session.commit()
 
     credentials_pool = PersistentCredentialsPool()
 
@@ -109,7 +109,7 @@ async def test_acquiring_single_credential_with_retries(session):
 
 
 @pytest.mark.asyncio()
-async def test_acquiring_and_releasing_coherence(session, caplog):
+async def test_acquiring_and_releasing_coherence(db_session, caplog):
     async def acquire_and_release(pool: PersistentCredentialsPool) -> None:
         cred = await pool.acquire(max_retries=5, min_wait=0.05)
         await asyncio.sleep(0.01)
@@ -139,10 +139,10 @@ async def test_acquiring_and_releasing_coherence(session, caplog):
 
     credential_metadata = [CredentialMetadata.from_orm(cred) for cred in credentials]
 
-    async with session() as _session:
+    async with db_session() as session:
         for credential in credentials:
-            _session.add(credential)
-        await _session.commit()
+            session.add(credential)
+        await session.commit()
 
     credentials_pool = PersistentCredentialsPool()
 
@@ -161,7 +161,7 @@ async def test_acquiring_and_releasing_coherence(session, caplog):
 
 
 @pytest.mark.asyncio()
-async def test_no_credentials_at_database(session):  # noqa: ARG001
+async def test_no_credentials_at_database(db_session):  # noqa: ARG001
     credentials_pool = PersistentCredentialsPool()
 
     with pytest.raises(NoCredentialsAtDatabaseError):
@@ -169,12 +169,12 @@ async def test_no_credentials_at_database(session):  # noqa: ARG001
 
 
 @pytest.mark.asyncio()
-async def test_credential_not_found_while_releasing(session):
+async def test_credential_not_found_while_releasing(db_session):
     single_credential = Credential(username='test_user1', password='pass1', in_use=False)
 
-    async with session() as _session:
-        _session.add(single_credential)
-        await _session.commit()
+    async with db_session() as session:
+        session.add(single_credential)
+        await session.commit()
 
     credentials_pool = PersistentCredentialsPool()
 
