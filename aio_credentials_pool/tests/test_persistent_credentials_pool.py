@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 import asyncpg
 import pytest
@@ -48,7 +49,7 @@ async def session(engine, schema_manager, mocker):
 
 
 @pytest.mark.asyncio()
-async def test_acquiring_single_credential_by_multiple_workers(session):
+async def test_acquiring_single_credential_without_retries(session):
     single_credential = Credential(username='test_user3', password='pass1', in_use=False)
 
     async with session() as _session:
@@ -82,6 +83,83 @@ async def test_acquiring_single_credential_by_multiple_workers(session):
     assert acquired_credentials[0] == CredentialMetadata.from_orm(
         single_credential,
     ), 'The acquired credential does not match the expected credential.'
+
+
+@pytest.mark.asyncio()
+async def test_acquiring_single_credential_with_retries(session):
+    async def acquire_and_release(pool: PersistentCredentialsPool) -> None:
+        credential = await pool.acquire(max_retries=5, min_wait=0.05)
+        await asyncio.sleep(0.01)
+        await pool.release(credential)
+
+    single_credential = Credential(username='test_user4', password='pass4', in_use=False)
+
+    async with session() as _session:
+        _session.add(single_credential)
+        await _session.commit()
+
+    credentials_pool = PersistentCredentialsPool()
+
+    num_workers = 3
+    tasks = [acquire_and_release(credentials_pool) for _ in range(num_workers)]
+
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    assert results == [None] * num_workers
+
+
+@pytest.mark.asyncio()
+async def test_acquiring_and_releasing_coherence(session, caplog):
+    async def acquire_and_release(pool: PersistentCredentialsPool) -> None:
+        cred = await pool.acquire(max_retries=5, min_wait=0.05)
+        await asyncio.sleep(0.01)
+        await pool.release(cred)
+
+    def check_log_release(log_msg: str, cred: CredentialMetadata, released: bool) -> bool:
+        log_content = log_msg.split('Credential released: ')
+        if len(log_content) == 2 and log_content[1] == repr(cred):
+            assert not released
+            released = True
+        return released
+
+    def check_log_acquire(log_msg: str, cred: CredentialMetadata, released: bool) -> bool:
+        log_content = log_msg.split('Credential acquired: ')
+        if len(log_content) == 2 and log_content[1] == repr(cred):
+            assert released
+            released = False
+        return released
+
+    caplog.set_level(level=logging.INFO)
+
+    credentials = [
+        Credential(username='test_user1', password='pass1', in_use=False),
+        Credential(username='test_user2', password='pass2', in_use=False),
+        Credential(username='test_user3', password='pass3', in_use=False)
+    ]
+
+    credential_metadata = [
+        CredentialMetadata.from_orm(cred) for cred in credentials
+    ]
+
+    async with session() as _session:
+        for credential in credentials:
+            _session.add(credential)
+        await _session.commit()
+
+    credentials_pool = PersistentCredentialsPool()
+
+    num_workers = 7
+    tasks = [acquire_and_release(credentials_pool) for _ in range(num_workers)]
+
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    assert results == [None] * num_workers
+
+    credential_released = [True] * len(credentials)
+
+    for log_message in caplog.messages:
+        for i, metadata in enumerate(credential_metadata):
+            credential_released[i] = check_log_release(log_message, metadata, credential_released[i])
+            credential_released[i] = check_log_acquire(log_message, metadata, credential_released[i])
 
 
 @pytest.mark.asyncio()
