@@ -3,7 +3,7 @@ import asyncio
 import asyncpg
 import pytest
 import pytest_asyncio
-from base_credentials_pool import CredentialMetadata, NoAvailableCredentials
+from base_credentials_pool import CredentialMetadata, NoAvailableCredentialsError
 from models import Base, Credential
 from persistent_credentials_pool import PersistentCredentialsPool, NoCredentialsAtDatabaseError, CredentialNotFoundError
 from settings import POSTGRES_URL
@@ -48,7 +48,7 @@ async def session(engine, schema_manager, mocker):
 
 
 @pytest.mark.asyncio()
-async def test_race_condition2(session):
+async def test_acquiring_single_credential_by_multiple_workers(session):
     single_credential = Credential(username='test_user3', password='pass1', in_use=False)
 
     async with session() as _session:
@@ -65,13 +65,14 @@ async def test_race_condition2(session):
     no_available_count = 0
     acquired_credentials = []
     for result in results:
-        if isinstance(result, NoAvailableCredentials):
+        if isinstance(result, NoAvailableCredentialsError):
             no_available_count += 1
         else:
             acquired_credentials.append(result)
 
     assert no_available_count == num_workers - 1, (
-        f'Expected {num_workers - 1} NoAvailableCredentials exceptions. Found {no_available_count} instead.'
+        f'Expected {num_workers - 1} NoAvailableCredentialsError exceptions.'
+        f' Found {no_available_count} instead.'
     )
 
     assert len(acquired_credentials) == 1, (

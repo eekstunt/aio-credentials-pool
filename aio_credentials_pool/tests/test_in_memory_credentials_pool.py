@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from base_credentials_pool import NoAvailableCredentials
+from base_credentials_pool import NoAvailableCredentialsError
 from in_memory_credentials_pool import (
     CredentialMetadata,
     InMemoryCredentialsPool,
@@ -25,7 +25,7 @@ async def test_race_condition(credentials):
             credential = await pool.acquire(max_retries=0)
             assert credential.username != acquired_credential.username
             await asyncio.sleep(0.02)
-        except NoAvailableCredentials:
+        except NoAvailableCredentialsError:
             pass
         finally:
             if credential:
@@ -50,6 +50,6 @@ async def test_acquiring_timeout(credentials):
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
-    no_available_count = sum(isinstance(result, NoAvailableCredentials) for result in results)
+    no_available_count = sum(isinstance(result, NoAvailableCredentialsError) for result in results)
 
-    assert no_available_count >= 1, 'Expected one or more NoAvailableCredentials exceptions'
+    assert no_available_count >= 1, 'Expected one or more NoAvailableCredentialsError exceptions'

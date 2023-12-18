@@ -7,7 +7,7 @@ from models import Credential
 LOGGER = logging.getLogger(__name__)
 
 
-class NoAvailableCredentials(Exception):
+class NoAvailableCredentialsError(Exception):
     pass
 
 
@@ -43,7 +43,7 @@ class BaseCredentialsPool:
                 await asyncio.sleep(wait_seconds)
                 current_wait *= 2
 
-        raise NoAvailableCredentials(f'No available credentials after {max_retries} retries')
+        raise NoAvailableCredentialsError(f'No available credentials after {max_retries} retries')
 
     async def release(self, credential: CredentialMetadata) -> None:
         await self._release(credential)
