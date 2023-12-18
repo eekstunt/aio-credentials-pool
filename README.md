@@ -56,3 +56,24 @@ Run tests using the following command:
 
 ```bash
 make test
+```
+
+### Developer Notes:
+
+- **Dependency Management - pip-tools:**  
+  Utilized pip-tools for consistent dependency pinning.
+
+- **Database Migrations - alembic:**  
+  Chose alembic for seamless database schema management with sqlalchemy compatibility.
+
+- **Asynchronous Programming - asyncio and asyncpg:**  
+  Leveraged asyncio and asyncpg for high-performance asynchronous I/O operations.
+
+- **Containerization - Docker:**  
+  Employed Docker for consistent and reproducible deployment across various environments.
+
+- **Code Formatting and Linting - ruff:**  
+  Utilized blazing fast ruff formatter and linter for automated code formatting and static analysis,
+maintaining code consistency and readability.
+
+
