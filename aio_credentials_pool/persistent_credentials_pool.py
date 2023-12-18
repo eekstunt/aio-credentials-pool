@@ -36,14 +36,10 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 class PersistentCredentialsPool(BaseCredentialsPool):
     async def _acquire(self) -> CredentialMetadata | None:
         async with get_session() as session:
-            count = (
-                await session.execute(
-                    select(func.count(Credential.id))
-                )
-            ).scalar()
+            count = (await session.execute(select(func.count(Credential.id)))).scalar()
 
             if count == 0:
-                raise NoCredentialsAtDatabaseError("Please, upload credentials to the database")
+                raise NoCredentialsAtDatabaseError('Please, upload credentials to the database')
 
             credential = (
                 await session.execute(

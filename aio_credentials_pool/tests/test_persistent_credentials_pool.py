@@ -72,8 +72,7 @@ async def test_acquiring_single_credential_without_retries(session):
             acquired_credentials.append(result)
 
     assert no_available_count == num_workers - 1, (
-        f'Expected {num_workers - 1} NoAvailableCredentialsError exceptions.'
-        f' Found {no_available_count} instead.'
+        f'Expected {num_workers - 1} NoAvailableCredentialsError exceptions.' f' Found {no_available_count} instead.'
     )
 
     assert len(acquired_credentials) == 1, (
@@ -134,12 +133,10 @@ async def test_acquiring_and_releasing_coherence(session, caplog):
     credentials = [
         Credential(username='test_user1', password='pass1', in_use=False),
         Credential(username='test_user2', password='pass2', in_use=False),
-        Credential(username='test_user3', password='pass3', in_use=False)
+        Credential(username='test_user3', password='pass3', in_use=False),
     ]
 
-    credential_metadata = [
-        CredentialMetadata.from_orm(cred) for cred in credentials
-    ]
+    credential_metadata = [CredentialMetadata.from_orm(cred) for cred in credentials]
 
     async with session() as _session:
         for credential in credentials:
