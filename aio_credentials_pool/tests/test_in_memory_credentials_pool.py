@@ -39,7 +39,7 @@ async def test_race_condition(credentials):
 
 
 @pytest.mark.asyncio()
-async def test_acquiring_timeout(credentials):
+async def test_no_available_credentials(credentials):
     async def acquire_and_release(pool: InMemoryCredentialsPool):
         credential = await pool.acquire(max_retries=0)
         await asyncio.sleep(0.3)
