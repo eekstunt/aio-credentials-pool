@@ -58,7 +58,7 @@ async def test_race_condition2(session, mocker):
     credentials_pool = PersistentCredentialsPool()
 
     num_workers = 10
-    tasks = [credentials_pool.acquire(max_retries=1) for _ in range(num_workers)]
+    tasks = [credentials_pool.acquire(max_retries=0) for _ in range(num_workers)]
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
 

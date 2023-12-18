@@ -22,7 +22,7 @@ async def test_race_condition(credentials):
     async def acquire_and_release(pool: InMemoryCredentialsPool, acquired_credential: CredentialMetadata):
         credential = None
         try:
-            credential = await pool.acquire(max_retries=1)
+            credential = await pool.acquire(max_retries=0)
             assert credential.username != acquired_credential.username
             await asyncio.sleep(0.02)
         except NoAvailableCredentials:
@@ -41,7 +41,7 @@ async def test_race_condition(credentials):
 @pytest.mark.asyncio()
 async def test_acquiring_timeout(credentials):
     async def acquire_and_release(pool: InMemoryCredentialsPool):
-        credential = await pool.acquire(max_retries=1)
+        credential = await pool.acquire(max_retries=0)
         await asyncio.sleep(0.3)
         await pool.release(credential)
 
