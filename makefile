@@ -3,6 +3,7 @@ help:
 	@echo "  run        : Build and start project"
 	@echo "  lint       : Run linters to check code quality"
 	@echo "  lint-fix   : Run linters and auto-fix issues (if possible)"
+	@echo "  test       : Run tests"
 	@echo "  migration  : Generate a new alembic migration"
 	@echo "  migrate    : Update database with alembic migrations"
 
